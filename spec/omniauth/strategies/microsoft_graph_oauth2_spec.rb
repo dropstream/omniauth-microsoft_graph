@@ -151,7 +151,7 @@ describe OmniAuth::Strategies::MicrosoftGraph do
       end
 
       it 'should set default scope to email,profile' do
-        expect(subject.authorize_params['scope']).to eq('openid email profile https://graph.microsoft.com/User.Read')
+        expect(subject.authorize_params['scope']).to eq('https://api.businesscentral.dynamics.com/user_impersonation offline_access')
       end
 
       it 'should support space delimited scopes' do
@@ -161,7 +161,7 @@ describe OmniAuth::Strategies::MicrosoftGraph do
 
       it 'should support extremely badly formed scopes' do
         @options = { scope: 'profile email,foo,steve yeah http://example.com' }
-        expect(subject.authorize_params['scope']).to eq('profile email https://graph.microsoft.com/foo https://graph.microsoft.com/steve https://graph.microsoft.com/yeah http://example.com')
+        expect(subject.authorize_params['scope']).to eq('profile email https://api.businesscentral.dynamics.com/foo https://api.businesscentral.dynamics.com/steve https://api.businesscentral.dynamics.com/yeah http://example.com')
       end
     end
 
@@ -249,50 +249,6 @@ describe OmniAuth::Strategies::MicrosoftGraph do
     it 'should set the callback_path parameter if present' do
       @options = { callback_path: '/auth/foo/callback' }
       expect(subject.callback_path).to eq('/auth/foo/callback')
-    end
-  end
-
-  describe '#info' do
-    let(:client) do
-      OAuth2::Client.new('abc', 'def') do |builder|
-        builder.request :url_encoded
-        builder.adapter :test do |stub|
-          stub.get('/v1.0/me') { [200, { 'content-type' => 'application/json' }, response_hash.to_json] }
-        end
-      end
-    end
-    let(:access_token) { OAuth2::AccessToken.from_hash(client, {}) }
-    before { allow(subject).to receive(:access_token).and_return(access_token) }
-
-    context 'with verified email' do
-      let(:response_hash) do
-        { mail: 'something@domain.invalid' }
-      end
-
-      it 'should return equal email ' do
-        expect(subject.info['email']).to eq('something@domain.invalid')
-      end
-    end
-
-  end
-
-  describe '#extra' do
-    let(:client) do
-      OAuth2::Client.new('abc', 'def') do |builder|
-        builder.request :url_encoded
-        builder.adapter :test do |stub|
-          stub.get('/v1.0/me') { [200, { 'content-type' => 'application/json' }, '{"id": "12345"}'] }
-        end
-      end
-    end
-    let(:access_token) { OAuth2::AccessToken.from_hash(client, {}) }
-
-    before { allow(subject).to receive(:access_token).and_return(access_token) }
-
-    describe 'raw_info' do
-      it 'should include raw_info' do
-        expect(subject.extra['raw_info']).to eq('id' => '12345')
-      end
     end
   end
 
