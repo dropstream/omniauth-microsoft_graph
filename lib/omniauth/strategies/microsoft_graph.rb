@@ -3,9 +3,9 @@ require 'omniauth-oauth2'
 module OmniAuth
   module Strategies
     class MicrosoftGraph < OmniAuth::Strategies::OAuth2
-      BASE_SCOPE_URL = 'https://graph.microsoft.com/'
+      BASE_SCOPE_URL = 'https://api.businesscentral.dynamics.com/'
+      DEFAULT_SCOPE = 'https://api.businesscentral.dynamics.com/user_impersonation offline_access'.freeze
       BASE_SCOPES = %w[offline_access openid email profile].freeze
-      DEFAULT_SCOPE = 'offline_access openid email profile User.Read'.freeze
 
       option :name, :microsoft_graph
 
@@ -23,21 +23,8 @@ module OmniAuth
       option :scope, DEFAULT_SCOPE
       option :authorized_client_ids, []
 
-      uid { raw_info["id"] }
-
-      info do
-        {
-          'email' => raw_info["mail"],
-          'first_name' => raw_info["givenName"],
-          'last_name' => raw_info["surname"],
-          'name' => [raw_info["givenName"], raw_info["surname"]].join(' '),
-          'nickname' => raw_info["displayName"],
-        }
-      end
-
       extra do
         {
-          'raw_info' => raw_info,
           'params' => access_token.params,
           'aud' => options.client_id
         }
@@ -54,10 +41,6 @@ module OmniAuth
 
           session['omniauth.state'] = params[:state] if params[:state]
         end
-      end     
-
-      def raw_info
-        @raw_info ||= access_token.get('https://graph.microsoft.com/v1.0/me').parsed
       end
 
       def callback_url
